@@ -8,6 +8,7 @@ import requests
 from abc import ABCMeta, abstractmethod
 from apiclient.discovery import build
 from datetime import datetime
+from httplib import BadStatusLine
 from lxml import etree
 from oauth2client.file import Storage
 from pyquery import PyQuery as pq
@@ -139,7 +140,9 @@ class Calendar(AbstractJob):
 
     def __init__(self, conf):
         self.interval = conf['interval']
+        self.api_key = conf['api_key']
 
+    def _auth(self):
         credentials_file = os.path.abspath(os.path.join(
             os.path.dirname(__file__), '.calendar.json'))
         storage = Storage(credentials_file)
@@ -147,7 +150,7 @@ class Calendar(AbstractJob):
         http = httplib2.Http()
         http = credentials.authorize(http)
         self.service = build(serviceName='calendar', version='v3', http=http,
-                             developerKey=conf['api_key'])
+                             developerKey=self.api_key)
 
     def _parse_date(self, date):
         if 'dateTime' in date:
@@ -162,15 +165,25 @@ class Calendar(AbstractJob):
         if len(items) == 0:
             return None
 
-        event = items[0]
-        date = self._parse_date(event['start'])
+        event = None
+        for item in items:
+            date = self._parse_date(item['start'])
+            if date is None:
+                continue
+            today = date.now().date()
+            if date.date() == today:
+                event = (item, date)
+                break
+            elif date.date() < today:
+                event = (item, date)
 
-        if date is None or date.date() != date.now().date():
+        if event is None:
             return None
 
         return {
-            'summary': event['summary'],
-            'start': date.strftime('%H:%M')
+            'id': event[0]['id'],
+            'summary': event[0]['summary'],
+            'start': event[1].strftime('%H:%M')
         }
 
     def get_events(self, items, today):
@@ -178,21 +191,30 @@ class Calendar(AbstractJob):
             return None
 
         events = []
-        start = 0 if today is None else 1
-        for event in items[start:]:
-            date = self._parse_date(event['start'])
+        for item in items:
+            if today is not None and today['id'] == item['id']:
+                continue
+            date = self._parse_date(item['start'])
             events.append({
-                'summary': event['summary'],
+                'id': item['id'],
+                'summary': item['summary'],
                 'start': date.strftime('%d.%m %H:%M')
             })
         return events
 
     def get(self):
-        now = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        result = self.service.events().list(calendarId='primary',
-                                            orderBy='startTime',
-                                            singleEvents=True,
-                                            timeMin=now).execute()
+        if not hasattr(self, 'service'):
+            self._auth()
+
+        now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        try:
+            result = self.service.events().list(calendarId='primary',
+                                                orderBy='startTime',
+                                                singleEvents=True,
+                                                timeMin=now).execute()
+        except BadStatusLine:
+            return {}
+
         items = result['items']
         today = self.get_current_event(items)
         events = self.get_events(items, today)
@@ -264,7 +286,7 @@ class Nsb(AbstractJob):
     def _parse(self, html):
         d = pq(html)
 
-        date = list(d.find('th.date').pop().itertext())[-1]
+        date = list(d.find('th.date')[0].itertext())[-1]
         departure_times = [el.text_content().strip() for el in
                            d.find('td.depart strong')]
         arrival_times = [el.text_content().strip() for el in
@@ -386,3 +408,33 @@ class Powermeter(AbstractJob):
         self.power = power
         wh = ((deltaW / deltaTime) if deltaTime != 0 else 0)
         return {'values': {'Power': wh}}
+
+def find_cls(name):
+    classes = [cls for cls in AbstractJob.__subclasses__()
+               if cls.__name__.lower() == name.lower()]
+    return classes.pop() if len(classes) > 0 else None
+
+
+if __name__ == '__main__':
+    import sys
+    from flask import Flask
+    from pprint import pprint
+
+    app = Flask(__name__)
+    app.config.from_envvar('JARVIS_SETTINGS')
+    conf = app.config['JOBS']
+
+    if len(sys.argv) > 1:
+        name = sys.argv[1].lower()
+    else:
+        jobs = ' '.join([cls.__name__.lower() for cls in
+                         AbstractJob.__subclasses__()])
+        name = raw_input('Name of the job to run [%s]: ' % (jobs,)).lower()
+
+    cls = find_cls(name)
+    if cls is None:
+        print 'No such job: %s' % (name,)
+        sys.exit(1)
+
+    job = cls(conf[name])
+    pprint(job.get())

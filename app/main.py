@@ -7,7 +7,7 @@ import Queue
 import SocketServer
 from apscheduler.scheduler import Scheduler
 from datetime import datetime, timedelta
-from flask import Flask, render_template, Response, request
+from flask import Flask, render_template, Response, request, abort
 from flask.ext.assets import Environment, Bundle
 
 
@@ -66,7 +66,16 @@ def _configure_bundles():
 
 
 @app.route('/')
-def index():
+@app.route('/<widget>')
+def index(widget=None):
+    if widget is not None:
+        x = request.args.get('x', 2)
+        y = request.args.get('y', 2)
+        widget_cls = jobs.find_cls(widget)
+        if widget_cls is None:
+            abort(404)
+        return render_template('index.html', layout='layout_single.html',
+                               widget=widget_cls.__name__, x=x, y=y)
     return render_template('index.html')
 
 
@@ -94,13 +103,11 @@ def _configure_jobs():
     conf = app.config['JOBS']
     for cls in jobs.AbstractJob.__subclasses__():
         name = cls.__name__.lower()
-        if name not in conf.keys() or 'enabled' not in conf[name] or \
-                not conf[name]['enabled']:
-            print 'Skipping missing or disabled job: %s' % (name,)
+        if name not in conf or not conf[name].get('enabled'):
+            print 'Skipping disabled job: %s' % (name,)
             continue
         job = cls(conf[name])
-        print 'Configuring job %s to run every %d seconds' % (name,
-                                                              job.interval)
+        print 'Configuring job: %s (interval: %d secs)' % (name, job.interval)
         start_date = datetime.now() + timedelta(seconds=1)
         sched.add_interval_job(_run_job,
                                seconds=job.interval,
@@ -114,7 +121,7 @@ def _run_job(widget, job):
     body = job.get()
     if not body:
         return
-    body.update({'updated_at': datetime.now().strftime('%H:%M')})
+    body['updated_at'] = datetime.now().strftime('%H:%M')
     json_data = json.dumps({
         'widget': widget,
         'body': body
