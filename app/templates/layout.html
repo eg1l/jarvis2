@@ -25,39 +25,51 @@
     </li>
     {% endif %}
     {% if config['JOBS']['sonos']['enabled'] %}
-    <li data-row="2" data-col="1" data-sizex="2" data-sizey="2"
+    <li data-row="2" data-col="5" data-sizex="2" data-sizey="2"
       ng-include src="'/static/widgets/sonos/sonos.html'"
       ng-controller="SonosCtrl">
     </li>
     {% endif %}
     {% if config['JOBS']['calendar']['enabled'] %}
-    <li data-row="2" data-col="2" data-sizex="2" data-sizey="2"
+    <li data-row="2" data-col="1" data-sizex="2" data-sizey="2"
       ng-include src="'/static/widgets/calendar/calendar.html'"
       ng-controller="CalendarCtrl">
     </li>
     {% endif %}
     {% if config['JOBS']['uptime']['enabled'] %}
-    <li data-row="2" data-col="3" data-sizex="2" data-sizey="2"
+    <li data-row="2" data-col="2" data-sizex="2" data-sizey="2"
       ng-include src="'/static/widgets/uptime/uptime.html'"
       ng-controller="UptimeCtrl">
     </li>
     {% endif %}
     {% if config['JOBS']['plex']['enabled'] %}
-    <li data-row="2" data-col="4" data-sizex="2" data-sizey="2"
+    <li data-row="2" data-col="3" data-sizex="2" data-sizey="2"
       ng-include src="'/static/widgets/plex/plex.html'"
       ng-controller="PlexCtrl">
     </li>
     {% endif %}
     {% if config['JOBS']['nsb']['enabled'] %}
-    <li data-row="3" data-col="1" data-sizex="2" data-sizey="2"
+    <li data-row="2" data-col="1" data-sizex="2" data-sizey="2"
       ng-include src="'/static/widgets/nsb/nsb.html'"
       ng-controller="NsbCtrl">
     </li>
     {% endif %}
     {% if config['JOBS']['ping']['enabled'] %}
-    <li data-row="3" data-col="2" data-sizex="4" data-sizey="2"
+    <li data-row="2" data-col="4" data-sizex="4" data-sizey="2"
       ng-include src="'/static/widgets/ping/ping.html'"
       ng-controller="PingCtrl">
+    </li>
+    {% endif %}
+    {% if config['JOBS']['wattmeter']['enabled'] %}
+    <li data-row="2" data-col="5" data-sizex="4" data-sizey="2"
+      ng-include src="'/static/widgets/wattmeter/wattmeter.html'"
+      ng-controller="WattmeterCtrl">
+    </li>
+    {% endif %}
+    {% if config['JOBS']['leaf']['enabled'] %}
+    <li data-row="3" data-col="1" data-sizex="2" data-sizey="2"
+      ng-include src="'/static/widgets/leaf/leaf.html'"
+      ng-controller="LeafCtrl">
     </li>
     {% endif %}
   </ul>
