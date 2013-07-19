@@ -1,0 +1,25 @@
+#leaf {
+    height: 100%;
+    padding: 5px;
+    background: #1B86AA;
+    text-align: center;
+}
+#leaf h1 {
+  font-size: 40px;
+}
+#leaf h2 {
+  font-size: 30px;
+}
+#leaf p {
+  font-size: 18px;
+}
+#leaf p:not(.updated-at) {
+  margin: 40px;
+}
+#leaf p.range {
+  margin: 20px;
+}
+#leaf #gauge {
+  height: 50%;
+  margin-top: -60px;
+}
