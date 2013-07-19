@@ -1,14 +1,14 @@
 #uptime {
   height: 100%;
   padding: 5px;
-  background: #B95835;
+  background: #00A413;
   text-align: center;
 }
 #uptime p {
   font-size: 18px;
 }
 #uptime table {
-  margin: 0 10px 0 10px;
+  margin: 54px 10px 0 10px;
 }
 #uptime .label {
   text-align: left;
@@ -19,4 +19,7 @@
   text-align: right;
   white-space: nowrap;
   font-size: 20px;
+}
+#uptime p:not(.updated-at) {
+    margin: 40px;
 }

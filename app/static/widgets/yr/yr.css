@@ -5,12 +5,15 @@
   text-align: center;
 }
 #yr h1 {
-  font-size: 55px;
-  margin: 0;
+  font-size: 62px;
+  margin: 20;
 }
 #yr h2 {
   font-size: 30px;
 }
 #yr p {
   font-size: 20px;
+}
+#yr p:not(.updated-at) {
+    margin: 40px;
 }

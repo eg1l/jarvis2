@@ -12,7 +12,7 @@ from lxml import etree
 from oauth2client.file import Storage
 from pyquery import PyQuery as pq
 from soco import SoCo
-from subprocess import Popen, PIPE
+from subprocess import call, Popen, PIPE
 
 
 class AbstractJob(object):
@@ -209,13 +209,12 @@ class Uptime(AbstractJob):
         self.interval = conf['interval']
 
     def get(self):
-        for host in self.hosts:
-            ping_cmd = 'ping6' if ':' in host['ip'] else 'ping'
-            ping = '%s -c 1 %s' % (ping_cmd, host['ip'])
-            p = Popen(ping.split(' '), stdout=PIPE, stderr=PIPE)
-            host['active'] = p.wait() == 0
+        with open(os.devnull, 'w') as devnull:
+            for host in self.hosts:
+                ping = 'ping -c 1 -t 1 -q %s' % (host['ip'],)
+                up = call(ping.split(' '), stdout=devnull, stderr=devnull)
+                host['active'] = (up == 0)
         return {'hosts': self.hosts}
-
 
 class Plex(AbstractJob):
 
@@ -248,7 +247,6 @@ class Plex(AbstractJob):
                 'season': show.get('parentIndex').zfill(2)
             })
         return data
-
 
 class Nsb(AbstractJob):
 
@@ -314,11 +312,77 @@ class Ping(AbstractJob):
     def _get_latency(self, host):
         ping_cmd = 'ping6' if ':' in host[1] else 'ping'
         ping = '%s -c 1 %s' % (ping_cmd, host[1])
-        p = Popen(ping.split(' '), stdout=PIPE, stderr=PIPE)
-        return self._parse_time(p.communicate()[0])
+        p = Popen(ping.split(' '), stdout=PIPE)
+        return self._parse_time(p.stdout.read())
 
     def get(self):
         data = {'values': {}}
         for host in self.hosts:
             data['values'][host[0]] = self._get_latency(host)
         return data
+
+class Leaf(AbstractJob):
+
+    def __init__(self, conf):
+        self.url = conf['url']
+        self.interval = conf['interval']
+
+    def _parse(self, xml):
+        ns2 = {'ns2': 'urn:com:airbiquity:smartphone.userservices:v2'}
+        ns3 = {'ns3': 'urn:com:hitachi:gdc:type:report:v1'}
+        ns4 = {'ns4': 'urn:com:airbiquity:smartphone.reportservice:v1'}
+        tree = etree.fromstring(xml)
+        return {
+            'charger': 'Tilkoblet' if tree.xpath('//ns3:PluginState',
+                namespaces=ns3).pop().text == 'CONNECTED' else 'Ikke tilkoblet',
+            'noacrange': float(tree.xpath('//ns3:CruisingRangeAcOff',
+                namespaces=ns3).pop().text) / 1000,
+            'battery': {
+                'status': 'Lader' if tree.xpath('//ns3:BatteryChargingStatus',\
+                        namespaces=ns3).pop().text == 'CHARGING'\
+                        else 'Lader ikke',
+                'capacity': tree.xpath('//ns3:BatteryCapacity',
+                    namespaces=ns3).pop().text,
+                'remaining': tree.xpath('//ns3:BatteryRemainingAmount',
+                    namespaces=ns3).pop().text,
+            }
+        }
+
+    def get(self):
+        xml_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+            'test_data',
+            'leaf.xml'))
+        with open(xml_path, 'r') as f:
+            xml = f.read()
+        return self._parse(xml)
+
+       # r = requests.get(self.url)
+
+       # if r.status_code == 200 and len(r.content) > 0:
+       #     return self._parse(r.content)
+       # return {}
+
+class Powermeter(AbstractJob):
+
+    def __init__(self, conf):
+        self.interval = conf['interval']
+        self.url = conf['url']
+        self.power = self.getPower()
+
+    def getPower(self):
+        r = requests.get(self.url)
+        if r.status_code == 200 and len(r.content) > 0:
+            return self._parse(r.content)
+        return {}
+
+    def _parse(self, html):
+        d = pq(html)
+        return d.text().split(' ')
+
+    def get(self):
+        power = self.getPower()
+        deltaTime = float(power[0]) - float(self.power[0])
+        deltaW = float(power[1]) - float(self.power[1])
+        self.power = power
+        wh = ((deltaW / deltaTime) if deltaTime != 0 else 0)
+        return {'values': {'Power': wh}}

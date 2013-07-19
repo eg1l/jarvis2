@@ -2,7 +2,7 @@
 
 var jarvis = jarvis || angular.module('jarvis', []);
 
-jarvis.controller('PingCtrl', ['$scope',
+jarvis.controller('PowermeterCtrl', ['$scope',
   function ($scope) {
     'use strict';
 
@@ -17,7 +17,7 @@ jarvis.controller('PingCtrl', ['$scope',
       var series = new Rickshaw.Series.FixedDuration(
         labels,
         new Rickshaw.Color.Palette({
-          scheme: 'colorwheel'
+          scheme: 'spectrum14'
         }), {
           timeInterval: 5000,
           maxDataPoints: 100,
@@ -29,29 +29,29 @@ jarvis.controller('PingCtrl', ['$scope',
         width: 586,
         height: 400,
         renderer: 'area',
-        stroke: false,
+        stroke: true,
         series: series
       });
       new Rickshaw.Graph.Legend({
-        element: document.querySelector('#legend'),
+        element: document.querySelector('#legend-pm'),
         graph: graph
       });
       new Rickshaw.Graph.Axis.Y({
-        element: document.querySelector('#y-axis'),
+        element: document.querySelector('#y-axis-pm'),
         graph: graph,
         orientation: 'left',
         ticks: 5,
         tickFormat: function (n) {
-          return n + ' ms';
+          return n + ' Wh';
         }
       });
       graph.renderer.unstack = true;
       graph.render();
     };
 
-    $scope.$on('ping', function (ev, body) {
+    $scope.$on('powermeter', function (ev, body) {
       if (graph === null) {
-        var element = document.querySelector('#chart');
+        var element = document.querySelector('#chart-pm');
         if (element !== null) {
           initGraph(element, body.values);
         }

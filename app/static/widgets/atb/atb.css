@@ -1,7 +1,7 @@
 #atb {
   height: 100%;
   padding: 5px;
-  background: #90ca77;
+  background: #BFBF28;
   text-align: center;
 }
 #atb h1 {
@@ -10,12 +10,13 @@
 }
 #atb h2 {
   font-size: 25px;
+  margin-top: 56px;
 }
 #atb p {
   font-size: 16px;
 }
 #atb table {
-  margin: 0 10px 0 10px;
+  margin: 50px 10px 0 10px;
 }
 #atb .time {
   text-align: right;
@@ -24,4 +25,7 @@
 #atb .destination {
   text-align: left;
   width: 100%;
+}
+#atb p:not(.updated-at) {
+    margin: 40px;
 }

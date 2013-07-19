@@ -10,12 +10,13 @@
 }
 #calendar h2 {
   font-size: 25px;
+  margin-top: 56px;
 }
 #calendar p {
   font-size: 16px;
 }
 #calendar table {
-  margin: 0 10px 0 10px;
+  margin: 50px 10px 0 10px;
 }
 #calendar .summary {
   text-align: left;
@@ -24,4 +25,7 @@
 #calendar .start {
   text-align: right;
   white-space: nowrap;
+}
+#calendar p:not(.updated-at) {
+    margin: 40px;
 }
