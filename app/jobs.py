@@ -350,10 +350,12 @@ class Leaf(AbstractJob):
         self.interval = conf['interval']
 
     def _parse(self, xml):
-        ns2 = {'ns2': 'urn:com:airbiquity:smartphone.userservices:v2'}
+#        ns2 = {'ns2': 'urn:com:airbiquity:smartphone.userservices:v2'}
         ns3 = {'ns3': 'urn:com:hitachi:gdc:type:report:v1'}
-        ns4 = {'ns4': 'urn:com:airbiquity:smartphone.reportservice:v1'}
+#        ns4 = {'ns4': 'urn:com:airbiquity:smartphone.reportservice:v1'}
         tree = etree.fromstring(xml)
+        batteryCapacity = float(tree.xpath('//ns3:BatteryCapacity',\
+                namespaces=ns3).pop().text)
         return {
             'charger': 'Tilkoblet' if tree.xpath('//ns3:PluginState',
                 namespaces=ns3).pop().text == 'CONNECTED' else 'Ikke tilkoblet',
@@ -363,10 +365,10 @@ class Leaf(AbstractJob):
                 'status': 'Lader' if tree.xpath('//ns3:BatteryChargingStatus',\
                         namespaces=ns3).pop().text == 'CHARGING'\
                         else 'Lader ikke',
-                'capacity': tree.xpath('//ns3:BatteryCapacity',
-                    namespaces=ns3).pop().text,
-                'remaining': tree.xpath('//ns3:BatteryRemainingAmount',
-                    namespaces=ns3).pop().text,
+                # As the battery degrade, 12 may not be 100%
+                'capacity': float(100) / float(12) * batteryCapacity,
+                'remaining': float(tree.xpath('//ns3:BatteryRemainingAmount',
+                    namespaces=ns3).pop().text) * 100 / batteryCapacity
             }
         }
 
@@ -384,14 +386,15 @@ class Leaf(AbstractJob):
        #     return self._parse(r.content)
        # return {}
 
-class Powermeter(AbstractJob):
+class Wattmeter(AbstractJob):
 
     def __init__(self, conf):
         self.interval = conf['interval']
         self.url = conf['url']
-        self.power = self.getPower()
+        self.name = conf['name']
+        self.wh = self.getWatt()
 
-    def getPower(self):
+    def getWatt(self):
         r = requests.get(self.url)
         if r.status_code == 200 and len(r.content) > 0:
             return self._parse(r.content)
@@ -402,12 +405,12 @@ class Powermeter(AbstractJob):
         return d.text().split(' ')
 
     def get(self):
-        power = self.getPower()
-        deltaTime = float(power[0]) - float(self.power[0])
-        deltaW = float(power[1]) - float(self.power[1])
-        self.power = power
+        wh = self.getWatt()
+        deltaTime = float(wh[0]) - float(self.wh[0])
+        deltaW = float(wh[1]) - float(self.wh[1])
+        self.wh = wh
         wh = ((deltaW / deltaTime) if deltaTime != 0 else 0)
-        return {'values': {'Power': wh}}
+        return {'values': {self.name: wh}}
 
 def find_cls(name):
     classes = [cls for cls in AbstractJob.__subclasses__()
