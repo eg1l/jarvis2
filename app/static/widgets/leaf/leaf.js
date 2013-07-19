@@ -5,9 +5,7 @@ jarvis.controller('LeafCtrl', ['$scope',
     'use strict';
 
     var gauge = null;
-
     var initGauge = function (element, battery) {
-
       gauge = new JustGage({
           id: element.id,
           title: ' ',
