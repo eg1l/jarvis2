@@ -1,8 +1,8 @@
 #leaf {
-    height: 100%;
-    padding: 5px;
-    background: #1B86AA;
-    text-align: center;
+  height: 100%;
+  padding: 5px;
+  background: #1B86AA;
+  text-align: center;
 }
 #leaf h1 {
   font-size: 40px;
@@ -17,7 +17,8 @@
   margin: 40px;
 }
 #leaf p.range {
-  margin: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 #leaf #gauge {
   height: 50%;
