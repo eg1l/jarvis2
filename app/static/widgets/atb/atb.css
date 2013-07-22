@@ -27,5 +27,5 @@
   width: 100%;
 }
 #atb p:not(.updated-at) {
-    margin: 40px;
+  margin: 40px;
 }
