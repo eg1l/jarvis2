@@ -412,11 +412,39 @@ class Wattmeter(AbstractJob):
         wh = ((deltaW / deltaTime) if deltaTime != 0 else 0)
         return {'values': {self.name: wh}}
 
+class Ambient(AbstractJob):
+
+    def __init__(self, conf):
+        self.sensors = conf['sensors']
+        self.interval = conf['interval']
+
+    def getValue(self, url):
+        r = requests.get(url)
+        if r.status_code == 200 and len(r.content) > 0:
+            return self._parse(r.content)
+        return {}
+
+    def _parse(self, html):
+        d = pq(html)
+        return d.text().split(' ')
+
+    def get(self):
+        data = {'sensors': {}}
+        for location, url in self.sensors:
+            sensorValue = self.getValue(url)
+            if len(sensorValue) > 0:
+                data['sensors'] = {
+                    location: {
+                        'temperature': sensorValue[0],
+                        'humidity': sensorValue[1],
+                    }
+                }
+        return data
+
 def find_cls(name):
     classes = [cls for cls in AbstractJob.__subclasses__()
                if cls.__name__.lower() == name.lower()]
     return classes.pop() if len(classes) > 0 else None
-
 
 if __name__ == '__main__':
     import sys
