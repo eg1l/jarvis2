@@ -1,0 +1,16 @@
+#ambient {
+  height: 100%;
+  padding: 5px;
+  background: #540578;
+  text-align: center;
+}
+#ambient .title {
+  text-align: left;
+  width: 100%;
+  font-size: 16px;
+}
+#ambient .year {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 16px;
+}

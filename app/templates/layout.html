@@ -72,5 +72,11 @@
       ng-controller="LeafCtrl">
     </li>
     {% endif %}
+    {% if config['JOBS']['leaf']['enabled'] %}
+    <li data-row="3" data-col="1" data-sizex="2" data-sizey="2"
+      ng-include src="'/static/widgets/ambient/ambient.html'"
+      ng-controller="AmbientCtrl">
+    </li>
+    {% endif %}
   </ul>
 </div>
