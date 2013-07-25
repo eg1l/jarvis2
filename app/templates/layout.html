@@ -1,27 +1,27 @@
 <div class="gridster" ng-controller="EventCtrl">
   <ul>
-    {% if config['JOBS']['yr']['enabled'] %}
+    {% if is_widget_enabled('yr') %}
     <li data-row="1" data-col="1" data-sizex="2" data-sizey="2"
-      ng-include src="'/static/widgets/yr/yr.html'"
+      ng-include src="'{{ url_for_mtime('static', filename='widgets/yr/yr.html') }}'"
       ng-controller="YrCtrl">
     </li>
     {% endif %}
-    {% if config['JOBS']['time']['enabled'] %}
+    {% if is_widget_enabled('time') %}
     <li data-row="1" data-col="2" data-sizex="2" data-sizey="2"
-      ng-include src="'/static/widgets/time/time.html'"
+      ng-include src="'{{ url_for_mtime('static', filename='widgets/time/time.html') }}'"
       ng-controller="TimeCtrl">
     </li>
     {% endif %}
-    {% if config['JOBS']['atb']['enabled'] %}
+    {% if is_widget_enabled('atb') %}
     <li data-row="1" data-col="3" data-sizex="2" data-sizey="2"
-      ng-include src="'/static/widgets/atb/atb.html'"
+      ng-include src="'{{ url_for_mtime('static', filename='widgets/atb/atb.html') }}'"
       ng-controller="AtbCtrl">
     </li>
     {% endif %}
-    {% if config['JOBS']['hackernews']['enabled'] %}
+    {% if is_widget_enabled('hackernews') %}
     <li data-row="1" data-col="4" data-sizex="2" data-sizey="2"
-      ng-include src="'/static/widgets/hackernews/hackernews.html'"
-      ng-controller="HackerNewsCtrl">
+      ng-include src="'{{ url_for_mtime('static', filename='widgets/hackernews/hackernews.html') }}'"
+      ng-controller="HackernewsCtrl">
     </li>
     {% endif %}
     {% if config['JOBS']['sonos']['enabled'] %}
@@ -76,6 +76,10 @@
     <li data-row="3" data-col="1" data-sizex="2" data-sizey="2"
       ng-include src="'/static/widgets/ambient/ambient.html'"
       ng-controller="AmbientCtrl">
+    {% if is_widget_enabled('gmail') %}
+    <li data-row="3" data-col="4" data-sizex="2" data-sizey="2"
+      ng-include src="'{{ url_for_mtime('static', filename='widgets/gmail/gmail.html') }}'"
+      ng-controller="GmailCtrl">
     </li>
     {% endif %}
   </ul>

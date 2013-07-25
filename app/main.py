@@ -7,7 +7,7 @@ import Queue
 import SocketServer
 from apscheduler.scheduler import Scheduler
 from datetime import datetime, timedelta
-from flask import Flask, render_template, Response, request, abort
+from flask import Flask, render_template, Response, request, abort, url_for
 from flask.ext.assets import Environment, Bundle
 
 
@@ -24,6 +24,7 @@ def _configure_bundles():
     js_vendor = [
         'js/jquery/jquery.min.js',
         'js/gridster/jquery.gridster.min.js',
+        'js/jquery-knob/jquery.knob.min.js',
         'js/angular/angular.min.js',
         'js/angular-truncate/angular-truncate.min.js',
         'js/d3/d3.min.js',
@@ -60,7 +61,7 @@ def _configure_bundles():
     assets.register('css_all', Bundle(*(css_vendor + css),
                                       output='assets/styles.css'))
     assets.register('js_min_all', Bundle(Bundle(*js_vendor),
-                                         Bundle(*js, filters='jsmin'),
+                                         Bundle(*js, filters='rjsmin'),
                                          output='assets/app.min.js'))
     assets.register('css_min_all', Bundle(*(css_vendor + css),
                                           filters='cssmin',
@@ -71,13 +72,12 @@ def _configure_bundles():
 @app.route('/<widget>')
 def index(widget=None):
     if widget is not None:
+        if not _is_enabled(widget):
+            abort(404)
         x = request.args.get('x', 2)
         y = request.args.get('y', 2)
-        widget_cls = jobs.find_cls(widget)
-        if widget_cls is None:
-            abort(404)
         return render_template('index.html', layout='layout_single.html',
-                               widget=widget_cls.__name__, x=x, y=y)
+                               widget=widget, x=x, y=y)
     return render_template('index.html')
 
 
@@ -100,12 +100,29 @@ def events():
     return Response(consume(), mimetype='text/event-stream')
 
 
+def _is_enabled(name):
+    conf = app.config['JOBS']
+    return name in conf and conf[name].get('enabled')
+
+
+@app.context_processor
+def _inject_template_methods():
+    def url_for_mtime(endpoint, **values):
+        if endpoint == 'static':
+            filename = values.get('filename', None)
+            if filename is not None:
+                file_path = os.path.join(app.root_path, endpoint, filename)
+                values['t'] = int(os.stat(file_path).st_mtime)
+        return url_for(endpoint, **values)
+    return dict(url_for_mtime=url_for_mtime, is_widget_enabled=_is_enabled)
+
+
 @app.before_first_request
 def _configure_jobs():
     conf = app.config['JOBS']
     for cls in jobs.AbstractJob.__subclasses__():
         name = cls.__name__.lower()
-        if name not in conf or not conf[name].get('enabled'):
+        if not _is_enabled(name):
             print 'Skipping disabled job: %s' % (name,)
             continue
         job = cls(conf[name])

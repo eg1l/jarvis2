@@ -2,6 +2,7 @@
 
 import dateutil.parser
 import httplib2
+import imaplib
 import os
 import re
 import requests
@@ -231,11 +232,19 @@ class Uptime(AbstractJob):
         self.interval = conf['interval']
 
     def get(self):
+<<<<<<< HEAD
         with open(os.devnull, 'w') as devnull:
             for host in self.hosts:
                 ping = 'ping -c 1 -t 1 -q %s' % (host['ip'],)
                 up = call(ping.split(' '), stdout=devnull, stderr=devnull)
                 host['active'] = (up == 0)
+=======
+        for host in self.hosts:
+            ping_cmd = 'ping6' if ':' in host['ip'] else 'ping'
+            ping = '%s -w 1 -c 1 %s' % (ping_cmd, host['ip'])
+            p = Popen(ping.split(' '), stdout=PIPE, stderr=PIPE)
+            host['active'] = p.wait() == 0
+>>>>>>> d7a2bd7cda6289b7bd42f56abb81c16cfd0d03f1
         return {'hosts': self.hosts}
 
 class Plex(AbstractJob):
@@ -332,15 +341,15 @@ class Ping(AbstractJob):
         return float(time.group(1)) if time is not None else 0
 
     def _get_latency(self, host):
-        ping_cmd = 'ping6' if ':' in host[1] else 'ping'
-        ping = '%s -c 1 %s' % (ping_cmd, host[1])
-        p = Popen(ping.split(' '), stdout=PIPE)
-        return self._parse_time(p.stdout.read())
+        ping_cmd = 'ping6' if ':' in host else 'ping'
+        ping = '%s -w 1 -c 1 %s' % (ping_cmd, host)
+        p = Popen(ping.split(' '), stdout=PIPE, stderr=PIPE)
+        return self._parse_time(p.communicate()[0])
 
     def get(self):
         data = {'values': {}}
-        for host in self.hosts:
-            data['values'][host[0]] = self._get_latency(host)
+        for label, host in self.hosts:
+            data['values'][label] = self._get_latency(host)
         return data
 
 class Leaf(AbstractJob):
@@ -440,6 +449,40 @@ class Ambient(AbstractJob):
                     }
                 }
         return data
+
+class Gmail(AbstractJob):
+
+    def __init__(self, conf):
+        self.interval = conf['interval']
+        self.email = conf['email']
+        self.password = conf['password']
+        self.folder = conf['folder']
+
+    def _parse_count(self, message):
+        count = re.search('\w+ (\d+)', message)
+        return int(count.group(1)) if count is not None else 0
+
+    def _get_count(self):
+        _, message = self.mail.status(self.folder, '(MESSAGES)')
+        return self._parse_count(message[0])
+
+    def _get_unread_count(self):
+        _, message = self.mail.status(self.folder, '(UNSEEN)')
+        return self._parse_count(message[0])
+
+    def get(self):
+        self.mail = imaplib.IMAP4_SSL('imap.gmail.com')
+        self.mail.login(self.email, self.password)
+        count = self._get_count()
+        unread = self._get_unread_count()
+        self.mail.logout()
+        return {
+            'email': self.email,
+            'folder': self.folder,
+            'count': count,
+            'unread': unread
+        }
+
 
 def find_cls(name):
     classes = [cls for cls in AbstractJob.__subclasses__()

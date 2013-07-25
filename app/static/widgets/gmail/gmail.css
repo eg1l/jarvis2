@@ -1,0 +1,12 @@
+#gmail {
+  height: 100%;
+  padding: 5px;
+  background: #8f6048;
+  text-align: center;
+}
+#gmail h1 {
+  font-size: 25px;
+}
+#gmail p {
+  font-size: 15px;
+}

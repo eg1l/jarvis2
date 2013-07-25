@@ -28,8 +28,9 @@ jarvis.controller('PingCtrl', ['$scope',
         element: element,
         width: 586,
         height: 400,
-        renderer: 'area',
-        stroke: false,
+        renderer: 'line',
+        stroke: true,
+        unstack: true,
         series: series
       });
       new Rickshaw.Graph.Legend({
