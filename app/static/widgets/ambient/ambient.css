@@ -6,7 +6,9 @@
 }
 #ambient h1 {
   font-size: 52px;
+  margin-bottom: 0px;
 }
 #ambient h2 {
   font-size: 30px;
+  margin-top: 10px;
 }

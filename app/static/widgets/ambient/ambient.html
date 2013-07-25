@@ -1,7 +1,7 @@
 <div id="ambient">
   <p class="fade">Hus</p>
     <div ng-repeat="(location, sensor) in sensors">
-      <h1>{{ location }}</h1>
+      <h1>{{ location }}:</h1>
       <h2>{{ sensor.temperature }}&deg; / {{ sensor.humidity }}%</h2>
     </div>
   <p class="fade updated-at">Sist oppdatert: {{ updated_at }}</p>
