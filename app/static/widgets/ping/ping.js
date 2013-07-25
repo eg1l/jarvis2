@@ -28,7 +28,7 @@ jarvis.controller('PingCtrl', ['$scope',
         element: element,
         width: 586,
         height: 400,
-        renderer: 'line',
+        renderer: 'area',
         stroke: true,
         unstack: true,
         series: series
