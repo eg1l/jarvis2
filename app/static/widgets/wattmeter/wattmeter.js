@@ -8,8 +8,8 @@ jarvis.controller('WattmeterCtrl', ['$scope',
 
     var graph = null;
 
-    var initGraph = function (element, values) {
-      var labels = Object.keys(values).map(function (name) {
+    var initGraph = function (element, value) {
+      var labels = Object.keys(value).map(function (name) {
         return {
           name: name
         };
@@ -53,10 +53,10 @@ jarvis.controller('WattmeterCtrl', ['$scope',
       if (graph === null) {
         var element = document.querySelector('#chart-pm');
         if (element !== null) {
-          initGraph(element, body.values);
+          initGraph(element, body.value);
         }
       } else {
-        graph.series.addData(body.values);
+        graph.series.addData(body.value);
         graph.render();
       }
     });
