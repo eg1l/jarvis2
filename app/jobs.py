@@ -232,19 +232,11 @@ class Uptime(AbstractJob):
         self.interval = conf['interval']
 
     def get(self):
-<<<<<<< HEAD
-        with open(os.devnull, 'w') as devnull:
-            for host in self.hosts:
-                ping = 'ping -c 1 -t 1 -q %s' % (host['ip'],)
-                up = call(ping.split(' '), stdout=devnull, stderr=devnull)
-                host['active'] = (up == 0)
-=======
         for host in self.hosts:
             ping_cmd = 'ping6' if ':' in host['ip'] else 'ping'
             ping = '%s -w 1 -c 1 %s' % (ping_cmd, host['ip'])
             p = Popen(ping.split(' '), stdout=PIPE, stderr=PIPE)
             host['active'] = p.wait() == 0
->>>>>>> d7a2bd7cda6289b7bd42f56abb81c16cfd0d03f1
         return {'hosts': self.hosts}
 
 class Plex(AbstractJob):
@@ -419,7 +411,7 @@ class Wattmeter(AbstractJob):
         deltaW = float(wh[1]) - float(self.wh[1])
         self.wh = wh
         wh = ((deltaW / deltaTime) if deltaTime != 0 else 0)
-        return {'values': {self.name: wh}}
+        return {'value': {self.name: wh}}
 
 class Ambient(AbstractJob):
 
