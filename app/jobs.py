@@ -392,9 +392,9 @@ class Wattmeter(AbstractJob):
         self.interval = conf['interval']
         self.url = conf['url']
         self.name = conf['name']
-        self.wh = self.getWatt()
+        self.wh = self._get_power()
 
-    def getWatt(self):
+    def _get_power(self):
         r = requests.get(self.url)
         if r.status_code == 200 and len(r.content) > 0:
             return self._parse(r.content)
@@ -405,7 +405,7 @@ class Wattmeter(AbstractJob):
         return d.text().split(' ')
 
     def get(self):
-        wh = self.getWatt()
+        wh = self._get_power()
         deltaTime = float(wh[0]) - float(self.wh[0])
         deltaW = float(wh[1]) - float(self.wh[1])
         self.wh = wh
@@ -418,7 +418,7 @@ class Ambient(AbstractJob):
         self.sensors = conf['sensors']
         self.interval = conf['interval']
 
-    def getValue(self, url):
+    def _get_sensor_value(self, url):
         r = requests.get(url)
         if r.status_code == 200 and len(r.content) > 0:
             return self._parse(r.content)
@@ -431,7 +431,7 @@ class Ambient(AbstractJob):
     def get(self):
         data = {'sensors': {}}
         for location, url in self.sensors:
-            sensorValue = self.getValue(url)
+            sensorValue = self._get_sensor_value(url)
             if len(sensorValue) > 0:
                 data['sensors'] = {
                     location: {
