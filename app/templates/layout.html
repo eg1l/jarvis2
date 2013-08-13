@@ -1,30 +1,5 @@
-<div class="gridster" ng-controller="EventCtrl">
+<div class="gridster" ng-controller="EventCtrl" ng-cloak>
   <ul>
-    {% if is_widget_enabled('yr') %}
-    <li data-row="1" data-col="1" data-sizex="2" data-sizey="2"
-      ng-include src="'{{ url_for_mtime('static', filename='widgets/yr/yr.html') }}'"
-      ng-controller="YrCtrl">
-    </li>
-    {% endif %}
-    {% if is_widget_enabled('time') %}
-    <li data-row="1" data-col="2" data-sizex="2" data-sizey="2"
-      ng-include src="'{{ url_for_mtime('static', filename='widgets/time/time.html') }}'"
-      ng-controller="TimeCtrl">
-    </li>
-    {% endif %}
-    {% if is_widget_enabled('atb') %}
-    <li data-row="1" data-col="3" data-sizex="2" data-sizey="2"
-      ng-include src="'{{ url_for_mtime('static', filename='widgets/atb/atb.html') }}'"
-      ng-controller="AtbCtrl">
-    </li>
-    {% endif %}
-    {% if is_widget_enabled('hackernews') %}
-    <li data-row="1" data-col="4" data-sizex="2" data-sizey="2"
-      ng-include src="'{{ url_for_mtime('static', filename='widgets/hackernews/hackernews.html') }}'"
-      ng-controller="HackernewsCtrl">
-    </li>
-    {% endif %}
-    {% if is_widget_enabled('sonos') %}
     <li data-row="2" data-col="5" data-sizex="2" data-sizey="2"
       ng-include src="'{{ url_for_mtime('static', filename='widgets/sonos/sonos.html') }}'"
       ng-controller="SonosCtrl">
@@ -78,9 +53,8 @@
       ng-controller="AmbientCtrl">
     {% endif %}
     {% if is_widget_enabled('gmail') %}
-    <li data-row="3" data-col="4" data-sizex="2" data-sizey="2"
-      ng-include src="'{{ url_for_mtime('static', filename='widgets/gmail/gmail.html') }}'"
-      ng-controller="GmailCtrl">
+    <li data-row="3" data-col="4" data-sizex="2" data-sizey="2">
+      {{ include_raw('gmail/gmail.html') }}
     </li>
     {% endif %}
   </ul>

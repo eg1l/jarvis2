@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
-import sys
+from __future__ import print_function
 import os.path
-
-from oauth2client.file import Storage
-from oauth2client.client import OAuth2WebServerFlow
-from oauth2client.tools import run
+import sys
 from flask import Flask
+from oauth2client.client import OAuth2WebServerFlow
+from oauth2client.file import Storage
+from oauth2client.tools import run
 
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True,
+            instance_path=os.path.abspath(os.path.join(
+                os.path.dirname(__file__), '..', 'app')))
 app.config.from_envvar('JARVIS_SETTINGS')
 config = app.config['JOBS']['calendar']
 
@@ -27,14 +29,14 @@ def main():
         client_secret=config['client_secret'],
         scope='https://www.googleapis.com/auth/calendar.readonly')
 
-    credentials_file = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                       '.calendar.json'))
+    credentials_file = os.path.join(app.instance_path, 'jobs',
+                                    '.calendar.json')
     storage = Storage(credentials_file)
     credentials = storage.get()
     if credentials is None or credentials.invalid:
         credentials = run(FLOW, storage)
     else:
-        print 'Google API credentials already exist: %s' % (credentials_file,)
+        print('Google API credentials already exist: %s' % (credentials_file,))
 
 
 if __name__ == '__main__':

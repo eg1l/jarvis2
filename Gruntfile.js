@@ -4,7 +4,6 @@ module.exports = function (grunt) {
 
   'use strict';
 
-  grunt.loadNpmTasks('grunt-bower-task');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -21,14 +20,6 @@ module.exports = function (grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    bower: {
-      install: {
-        options: {
-          targetDir: './app/static',
-          cleanBowerDir: true
-        }
-      }
-    },
     jshint: {
       options: {
         bitwise: false,
@@ -64,7 +55,9 @@ module.exports = function (grunt) {
             angular: true,
             $: true,
             EventSource: true,
-            Rickshaw: true
+            Rickshaw: true,
+            moment: true,
+            Gauge: true
           }
         },
         files: {
@@ -79,6 +72,7 @@ module.exports = function (grunt) {
       scripts: {
         files: [
           'app/static/js/app/*.js',
+          'app/static/css/app/*.less',
           'app/static/widgets/*/*.js',
           'app/static/widgets/*/*.less'
         ],
@@ -104,8 +98,8 @@ module.exports = function (grunt) {
     uglify: {
       dist: {
         files: {
-          'app/static/js/jquery-knob/jquery.knob.min.js': [
-            'app/static/js/jquery-knob/jquery.knob.js'
+          'app/static/js/gauge.js/gauge.min.js': [
+            'bower_components/gauge.js/dist/gauge.js'
           ]
         }
       }
@@ -113,6 +107,5 @@ module.exports = function (grunt) {
   });
 
   grunt.registerTask('hint', 'jshint');
-  grunt.registerTask('build', ['bower', 'jsbeautifier', 'jshint', 'less']);
   grunt.registerTask('default', ['jsbeautifier', 'jshint', 'less']);
 };

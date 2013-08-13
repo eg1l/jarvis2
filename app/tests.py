@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import jobs
 import json
 import os.path
 import unittest
 from datetime import datetime, timedelta
+from jobs import yr, atb, hackernews, nsb, ping, calendar, gmail
+from lxml import etree
 
 
 class Yr(unittest.TestCase):
@@ -14,11 +16,11 @@ class Yr(unittest.TestCase):
                                    'test_data',
                                    'varsel.xml'))
         with open(xml_path, 'r') as f:
-            self.xml = f.read()
+            self.tree = etree.fromstring(f.read())
 
-    def test_parse(self):
-        yr = jobs.Yr({'interval': None, 'url': None})
-        data = yr._parse(self.xml)
+    def test_parse_tree(self):
+        y = yr.Yr({'interval': None, 'url': None})
+        data = y._parse_tree(self.tree)
 
         self.assertEqual('Delvis skyet', data['description'])
         self.assertEqual('Trondheim', data['location'])
@@ -26,6 +28,17 @@ class Yr(unittest.TestCase):
         self.assertEqual('Nord', data['wind']['direction'])
         self.assertEqual('0.7', data['wind']['speed'])
         self.assertEqual('Flau vind', data['wind']['description'])
+
+    def test_parse_tree_date(self):
+        y = yr.Yr({'interval': None, 'url': None})
+        data = y._parse_tree_date(self.tree, datetime(2013, 7, 1))
+
+        self.assertEqual('Regn', data['description'])
+        self.assertEqual('Trondheim', data['location'])
+        self.assertEqual('23', data['temperature'])
+        self.assertEqual(u'Sør', data['wind']['direction'])
+        self.assertEqual('3.6', data['wind']['speed'])
+        self.assertEqual('Lett bris', data['wind']['description'])
 
 
 class Atb(unittest.TestCase):
@@ -38,10 +51,10 @@ class Atb(unittest.TestCase):
             self.json = json.loads(f.read())
 
     def test_parse(self):
-        atb = jobs.Atb({'interval': None, 'url': None})
+        a = atb.Atb({'interval': None, 'url': None})
         now = datetime.now()
-        data = atb._parse(self.json, now=datetime(now.year, now.month, now.day,
-                                                  21, 30, 0, 0))
+        data = a._parse(self.json, now=datetime(now.year, now.month, now.day,
+                                                21, 30, 0, 0))
 
         departures = data['departures']
         self.assertEqual(5, len(departures))
@@ -52,10 +65,10 @@ class Atb(unittest.TestCase):
         self.assertEqual(10, departures[4]['eta'])
 
     def test_parse_gt_or_eq_zero(self):
-        atb = jobs.Atb({'interval': None, 'url': None})
+        a = atb.Atb({'interval': None, 'url': None})
         now = datetime.now()
-        data = atb._parse(self.json, now=datetime(now.year, now.month, now.day,
-                                                  21, 35, 0, 0))
+        data = a._parse(self.json, now=datetime(now.year, now.month, now.day,
+                                                21, 35, 0, 0))
 
         departures = data['departures']
         self.assertEqual(5, len(departures))
@@ -74,7 +87,7 @@ class HackerNews(unittest.TestCase):
                                     'hn.html'))
         with open(html_path, 'r') as f:
             self.html = f.read()
-        self.hn = jobs.HackerNews({'interval': None})
+        self.hn = hackernews.HackerNews({'interval': None})
 
     def test_parse(self):
         data = self.hn._parse(self.html)
@@ -98,8 +111,8 @@ class Nsb(unittest.TestCase):
         with open(os.path.join(test_data, 'nsb2.html')) as f:
             self.html2 = f.read()
 
-        self.nsb = jobs.Nsb({'interval': None, 'from': 'Lerkendal',
-                             'to': 'Rotvoll'})
+        self.nsb = nsb.Nsb({'interval': None, 'from': 'Lerkendal',
+                            'to': 'Rotvoll'})
 
     def test_parse(self):
         data = self.nsb._parse(self.html)
@@ -127,7 +140,7 @@ class Nsb(unittest.TestCase):
 class Ping(unittest.TestCase):
 
     def setUp(self):
-        self.ping = jobs.Ping({'interval': None, 'hosts': None})
+        self.ping = ping.Ping({'interval': None, 'hosts': None})
 
     def test_parse_time(self):
         s = ('PING google.com (173.194.69.139): 56 data bytes\n'
@@ -143,11 +156,11 @@ class Ping(unittest.TestCase):
 class Calendar(unittest.TestCase):
 
     def setUp(self):
-        self.calendar = jobs.Calendar({'interval': None, 'api_key': None})
+        self.calendar = calendar.Calendar({'interval': None, 'api_key': None})
 
     def test_parse_date(self):
-        date = datetime(2013, 07, 17)
-        dateTime = datetime(2013, 07, 17, 20)
+        date = datetime(2013, 7, 17)
+        dateTime = datetime(2013, 7, 17, 20)
 
         self.assertEqual(dateTime, self.calendar._parse_date(
             {'dateTime': dateTime.strftime('%Y-%m-%dT%H:%M:%S')}))
@@ -223,7 +236,7 @@ class Calendar(unittest.TestCase):
 class Gmail(unittest.TestCase):
 
     def setUp(self):
-        self.gmail = jobs.Gmail({'interval': None, 'email': None,
+        self.gmail = gmail.Gmail({'interval': None, 'email': None,
                                  'password': None, 'folder': None})
 
     def test_parse_count(self):

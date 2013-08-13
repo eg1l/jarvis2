@@ -1,18 +1,30 @@
 #!/usr/bin/env python
 
-import jobs
+import jinja2
 import json
+import logging
 import os
 import Queue
 import SocketServer
 from apscheduler.scheduler import Scheduler
 from datetime import datetime, timedelta
-from flask import Flask, render_template, Response, request, abort, url_for
+from flask import Flask, render_template, Response, request, abort
 from flask.ext.assets import Environment, Bundle
+from jobs import load_jobs
+from random import randint
 
 
+logging.basicConfig()
 app = Flask(__name__)
 app.config.from_envvar('JARVIS_SETTINGS')
+widgets_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                            'static', 'widgets'))
+app.jinja_loader = jinja2.ChoiceLoader([
+    app.jinja_loader, jinja2.FileSystemLoader(widgets_path)
+])
+app.jinja_env.trim_blocks = True
+app.jinja_env.lstrip_blocks = True
+logger = app.logger
 assets = Environment(app)
 sched = Scheduler()
 queues = {}
@@ -24,13 +36,14 @@ def _configure_bundles():
     js_vendor = [
         'js/jquery/jquery.min.js',
         'js/gridster/jquery.gridster.min.js',
-        'js/jquery-knob/jquery.knob.min.js',
         'js/angular/angular.min.js',
         'js/angular-truncate/angular-truncate.min.js',
         'js/d3/d3.min.js',
         'js/rickshaw/rickshaw.min.js',
         'js/justgage/justgage.min.js',
         'js/raphael/raphael.min.js',
+        'js/moment/moment.min.js',
+        'js/gauge.js/gauge.min.js'
     ]
     js = [
         'js/app/gridster.js',
@@ -38,15 +51,13 @@ def _configure_bundles():
     ]
     css_vendor = [
         'css/normalize-css/normalize.css',
-        'css/gridster/jquery.gridster.css',
-        'css/rickshaw/rickshaw.css'
+        'css/gridster/jquery.gridster.min.css',
+        'css/rickshaw/rickshaw.min.css'
     ]
     css = [
         'css/app/styles.css'
     ]
 
-    widgets_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                   'static', 'widgets'))
     for widget in os.listdir(widgets_path):
         widget_path = os.path.join('widgets', widget)
         for asset_file in os.listdir(os.path.join(widgets_path, widget)):
@@ -97,37 +108,41 @@ def events():
                 break
             yield 'data: %s\n\n' % (data,)
 
-    return Response(consume(), mimetype='text/event-stream')
+    response = Response(consume(), mimetype='text/event-stream')
+    response.headers['X-Accel-Buffering'] = 'no'
+    return response
 
 
-def _is_enabled(name):
-    conf = app.config['JOBS']
+def _is_enabled(name, conf=None):
+    if conf is None:
+        conf = app.config['JOBS']
     return name in conf and conf[name].get('enabled')
 
 
 @app.context_processor
 def _inject_template_methods():
-    def url_for_mtime(endpoint, **values):
-        if endpoint == 'static':
-            filename = values.get('filename', None)
-            if filename is not None:
-                file_path = os.path.join(app.root_path, endpoint, filename)
-                values['t'] = int(os.stat(file_path).st_mtime)
-        return url_for(endpoint, **values)
-    return dict(url_for_mtime=url_for_mtime, is_widget_enabled=_is_enabled)
+    def include_raw(name):
+        return jinja2.Markup(app.jinja_loader.get_source(app.jinja_env,
+                                                         name)[0])
+    return dict(is_widget_enabled=_is_enabled, include_raw=include_raw)
 
 
 @app.before_first_request
 def _configure_jobs():
     conf = app.config['JOBS']
-    for cls in jobs.AbstractJob.__subclasses__():
-        name = cls.__name__.lower()
-        if not _is_enabled(name):
-            print 'Skipping disabled job: %s' % (name,)
+    offset = 0
+    for name, cls in load_jobs().items():
+        if not _is_enabled(name, conf):
+            logger.info('Skipping disabled job: %s', name)
             continue
         job = cls(conf[name])
-        print 'Configuring job: %s (interval: %d secs)' % (name, job.interval)
-        start_date = datetime.now() + timedelta(seconds=1)
+        if app.debug:
+            start_date = datetime.now() + timedelta(seconds=1)
+        else:
+            offset += randint(4, 10)
+            start_date = datetime.now() + timedelta(seconds=offset)
+        logger.info('Configuring job: %s [start_date=%s, seconds=%s]', name,
+                    start_date, job.interval)
         sched.add_interval_job(_run_job,
                                seconds=job.interval,
                                start_date=start_date,
