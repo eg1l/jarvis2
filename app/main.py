@@ -41,9 +41,8 @@ def _configure_bundles():
         'js/d3/d3.min.js',
         'js/rickshaw/rickshaw.min.js',
         'js/moment/moment.min.js',
-        'js/gauge.js/gauge.min.js',
-        'js/justgage/justgage.min.js',
-        'js/raphael/raphael.min.js'
+        'js/moment/nb.js',
+        'js/gauge.js/gauge.min.js'
     ]
     js = [
         'js/app/gridster.js',
@@ -144,6 +143,7 @@ def _configure_jobs():
         logger.info('Configuring job: %s [start_date=%s, seconds=%s]', name,
                     start_date, job.interval)
         sched.add_interval_job(_run_job,
+                               name=name,
                                seconds=job.interval,
                                start_date=start_date,
                                kwargs={'widget': name, 'job': job})
