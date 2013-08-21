@@ -28,5 +28,5 @@ class Wattmeter(AbstractJob):
         deltaTime = float(wh[0]) - float(self.wh[0])
         deltaW = float(wh[1]) - float(self.wh[1])
         self.wh = wh
-        wh = ((deltaW / deltaTime) / 10 if deltaTime != 0 else 0)
+        wh = float((deltaW / deltaTime) / 10) if deltaTime != 0 else 0
         return {'value': {self.name: wh}}
