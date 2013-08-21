@@ -1,8 +1,8 @@
-<div id="leaf">
+<div id="leaf" ng-controller="LeafCtrl">
   <p class="fade">Leaf</p>
-  <h2>{{ battery.status }}</h2>
-  <h3>{{ charger }}</h3>
+  <h2>{{ charger.plugstate }}</h2>
+  <h2>{{ charger.status }}</h2>
   <div id="gauge"/>
-  <p class="range">Rekkevidde: {{ noacrange }} km</p>
+  <p class="range">Rekkevidde: {{ range.acoff }} ({{ range.acon }}) km</p>
   <p class="fade updated-at">Sist oppdatert: {{ updated_at }}</p>
 </div>
