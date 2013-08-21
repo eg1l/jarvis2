@@ -34,8 +34,8 @@ jarvis.controller('LeafCtrl', ['$scope',
         }
       } else {
         // Round to nearest 10
-        gauge.refresh((Math.round((100/12*getRandomInt(0,12))/10))*10);
-//        gauge.refresh(body.battery.remaining);
+//        gauge.refresh((Math.round((100/12*getRandomInt(0,12))/10))*10);
+        gauge.refresh(body.battery.remaining);
       }
     });
   }
