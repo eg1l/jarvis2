@@ -40,10 +40,10 @@ def _configure_bundles():
         'js/angular-truncate/angular-truncate.min.js',
         'js/d3/d3.min.js',
         'js/rickshaw/rickshaw.min.js',
-        'js/justgage/justgage.min.js',
-        'js/raphael/raphael.min.js',
         'js/moment/moment.min.js',
-        'js/gauge.js/gauge.min.js'
+        'js/gauge.js/gauge.min.js',
+        'js/justgage/justgage.min.js',
+        'js/raphael/raphael.min.js'
     ]
     js = [
         'js/app/gridster.js',
