@@ -25,8 +25,10 @@ class Wattmeter(AbstractJob):
 
     def get(self):
         wh = self._get_power()
-        deltaTime = float(wh[0]) - float(self.wh[0])
-        deltaW = float(wh[1]) - float(self.wh[1])
-        self.wh = wh
-        wh = float((deltaW / deltaTime) / 10) if deltaTime != 0 else 0
-        return {'value': {self.name: wh}}
+        if len(wh) == 2:
+            deltaTime = float(wh[0]) - float(self.wh[0])
+            deltaW = float(wh[1]) - float(self.wh[1])
+            self.wh = wh
+            wh = float((deltaW / deltaTime) / 10) if deltaTime != 0 else 0
+            return {'value': {self.name: wh}}
+        return None
