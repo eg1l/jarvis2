@@ -10,7 +10,7 @@ jarvis.controller('StatsCtrl', ['$scope',
     };
     var opts = {
       lines: 8,
-      angle: 0.15,
+      angle: 0.07,
       lineWidth: 0.3,
       pointer: {
         length: 0.85,
