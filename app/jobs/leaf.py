@@ -42,14 +42,12 @@ class Carwings():
         self.handler = urllib2.HTTPCookieProcessor()
         self.opener = urllib2.build_opener(self.handler)
 
-    def post_xml(self, service, xml_data, suppress_response=False):
+    def _post_xml(self, service, xml_data, suppress_response=False):
         data = xml_data.toxml()
         request = urllib2.Request("%s%s" % (self.base_url, service), data,
                                   {'Content-Type': 'text/xml',
                                    'User-Agent':
-                                   'NissanLEAF/1.40 \
-                                   CFNetwork/485.13.9 \
-                                   Darwin/11.0.0 pyCW'})
+                                   'NissanLEAF/1.40'})
         response = self.opener.open(request)
         response_data = response.read()
         response.close()
@@ -68,10 +66,10 @@ class Carwings():
              'SmartphoneOperationType':
              'SmartphoneLatestBatteryStatusRequest'}
         ns = {'ns2': self.us_ns['ns2']}
-        xml = self.dict_to_xml(d,
-                               'ns2:SmartphoneLogin' +
-                               'WithAdditionalOperationRequest', ns)
-        response_data = self.post_xml('/userService', xml)
+        xml = self._dict_to_xml(d,
+                                'ns2:SmartphoneLogin' +
+                                'WithAdditionalOperationRequest', ns)
+        response_data = self._post_xml('/userService', xml)
         if self._check_login(response_data):
             self._request_update(self._get_vin(response_data))
             return self._parse_xml(response_data)
@@ -84,9 +82,9 @@ class Carwings():
     def _request_update(self, vin):
         d = {'ns3:BatteryStatusCheckRequest':
             {'ns3:VehicleServiceRequestHeader': {'ns2:VIN': vin}}}
-        xml = self.dict_to_xml(
+        xml = self._dict_to_xml(
             d, 'ns4:SmartphoneRemoteBatteryStatusCheckRequest', self.vs_ns)
-        self.post_xml('/vehicleService', xml)
+        self._post_xml('/vehicleService', xml)
 
     def _get_vin(self, data):
         ns = {'ns3': self.vs_ns['ns3']}
@@ -122,26 +120,24 @@ class Carwings():
         }
 
     def _get_charge_status(self, namespaces, tree):
-        if tree.xpath('//ns3:TimeRequiredToFull200',
-                      namespaces=self.vs_ns):
+        if tree.xpath('//ns3:TimeRequiredToFull200', namespaces=namespaces):
             hourFinished = tree.xpath('//ns3:HourRequiredToFull',
-                                      namespaces=self.vs_ns).pop().text
+                                      namespaces=namespaces).pop().text
             minuteFinished = tree.xpath('//ns3:MinutesRequiredToFull',
-                                        namespaces=self.vs_ns).pop().text
+                                        namespaces=namespaces).pop().text
             donein = hourFinished + ':' + minuteFinished.zfill(2)
-            return {
-                'plugstate': 'Tilkoblet'
-                if tree.xpath('//ns3:PluginState',
-                              namespaces=self.vs_ns).pop().text ==
-                'CONNECTED'
-                else 'Ikke tilkoblet', 'status': 'Lader ('+str(donein)+')'
-                if tree.xpath('//ns3:BatteryChargingStatus',
-                              namespaces=self.vs_ns).pop().text ==
-                'NORMAL_CHARGING'
-                else 'Lader ikke',
-            }
+        return {
+            'plugstate': 'Tilkoblet'
+            if tree.xpath('//ns3:PluginState',
+                          namespaces=namespaces).pop().text ==
+            'CONNECTED' else 'Ikke tilkoblet',
+            'status': 'Lader ('+str(donein)+')'
+            if tree.xpath('//ns3:BatteryChargingStatus',
+                          namespaces=namespaces).pop().text ==
+            'NORMAL_CHARGING' else 'Lader ikke',
+        }
 
-    def dict_to_xml(self, data, root_name, namespaces=None):
+    def _dict_to_xml(self, data, root_name, namespaces=None):
         doc = minidom.Document()
         root = doc.createElement(root_name)
 
@@ -149,25 +145,25 @@ class Carwings():
             for ns_name, ns_uri in namespaces.iteritems():
                 root.setAttribute('xmlns:%s' % ns_name, ns_uri)
                 doc.appendChild(root)
-                self.xml_add_dict(data, root, doc)
+                self._xml_add_dict(data, root, doc)
         return doc
 
-    def xml_add_dict(self, data, root, doc):
+    def _xml_add_dict(self, data, root, doc):
         for name, value in data.iteritems():
             if isinstance(value, list):
-                self.xml_add_list(value, name, root, doc)
+                self._xml_add_list(value, name, root, doc)
             else:
-                self.xml_add_item(value, name, root, doc)
+                self._xml_add_item(value, name, root, doc)
 
-    def xml_add_list(self, data, name, root, doc):
+    def _xml_add_list(self, data, name, root, doc):
         for item in data:
-            self.xml_add_item(item, name, root, doc)
+            self._xml_add_item(item, name, root, doc)
 
-    def xml_add_item(self, data, name, root, doc):
+    def _xml_add_item(self, data, name, root, doc):
         if isinstance(data, dict):
             node = doc.createElement(name)
             root.appendChild(node)
-            self.xml_add_dict(data, node, doc)
+            self._xml_add_dict(data, node, doc)
         else:
             if name.startswith('@'):
                 root.setAttribute(name[1:], data)
