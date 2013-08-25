@@ -97,7 +97,7 @@ JOBS['avinor'] = {
 }
 
 JOBS['stats'] = {
-    'enabled': True,
+    'enabled': False,
     'interval': 600,
     # Nickname on #tihlde @ EFnet
     'nick': 'nick',
@@ -106,4 +106,30 @@ JOBS['stats'] = {
         'coffee': 8,
         'beer': 10
     }
+}
+
+JOBS['wattmeter'] = {
+    'enabled': True,
+    'interval': 15,
+    'name': '',
+    # Expects the following format returned: 'POSIX time' 'Power ticks'
+    # Ex: 1377424365 2041096
+    'url': '',
+}
+
+JOBS['ambient'] = {
+    'enabled': True,
+    'interval': 10,
+    'sensors': [
+        ('Stue', 'http://server:5000/ambient?sensor=livingroom'),
+    ]
+}
+
+JOBS['leaf'] = {
+    'enabled': True,
+    'interval': 600,
+    # Carwings credentials
+    'username': '',
+    'password': '',
+    'base_url': 'https://nissan-eu-smartphone-biz.viaaq.eu/aqPortal/smartphoneProxy'
 }
