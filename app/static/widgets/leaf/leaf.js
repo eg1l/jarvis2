@@ -4,39 +4,38 @@ jarvis.controller('LeafCtrl', ['$scope',
   function ($scope) {
     'use strict';
 
-    var gauge = null;
-    var initGauge = function (element, battery) {
-      gauge = new JustGage({
-          id: element.id,
-          title: ' ',
-          min: 0,
-          max: battery.capacity,
-          value: battery.remaining,
-          label: 'prosent',
-          showMinMax: true,
-          valueFontColor: '#FFFFFF',
-          gaugeColor: '#38A6CB',
-          labelColor: '#FFFFFF',
-          gaugeWidthScale: 0.7,
-          levelColors: ['#FF0000','#FAD328','#09C000'],
-          showInnerShadow: true,
-          startAnimationTime: 2000,
-          refreshAnimationTime: 2000,
-      });
+    var gauges = {
+      battery: null,
+    };
+
+    var opts = {
+      lines: 12,
+      angle: 0.07,
+      lineWidth: 0.3,
+      pointer: {
+        length: 0.85,
+        strokeWidth: 0.045,
+        color: '#ffffff'
+      },
+      percentColors: [[0,"#FF0000"],[.5,"#FAD328"],[1,"#09C000"]],
+      strokeColor: '#38A6CB'
+    };
+
+    var updateGauge = function (gauge, body) {
+      if (gauges[gauge] === null) {
+        var target = document.querySelector('#leaf #' + gauge);
+        var textField = document.querySelector('#leaf #' + gauge + '-text');
+        gauges[gauge] = new Gauge(target).setOptions(opts);
+        gauges[gauge].setTextField(textField);
+        gauges[gauge].maxValue = body.battery.capacity;
+        gauge.animationSpeed = 100;
+      }
+      gauges[gauge].set(body.battery.remaining);
     };
 
     $scope.$on('leaf', function (ev, body) {
+      updateGauge('battery', body);
       angular.extend($scope, body);
-      if (gauge === null) {
-        var element = document.querySelector('#gauge');
-        if (element !== null) {
-          initGauge(element, body.battery);
-        }
-      } else {
-        // Round to nearest 10
-//        gauge.refresh((Math.round((100/12*getRandomInt(0,12))/10))*10);
-        gauge.refresh(body.battery.remaining);
-      }
     });
   }
 ]);

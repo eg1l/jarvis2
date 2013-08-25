@@ -13,9 +13,6 @@
 #leaf p {
   font-size: 18px;
 }
-#leaf p:not(.updated-at) {
-  margin: 40px;
-}
 #leaf p.range {
   margin-top: 10px;
   margin-bottom: 10px;
@@ -23,4 +20,7 @@
 #leaf #gauge {
   height: 50%;
   margin-top: -60px;
+}
+#leaf p:not(.updated-at) {
+  margin: 40px;
 }
