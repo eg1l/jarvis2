@@ -12,3 +12,6 @@
   font-size: 30px;
   margin-top: 10px;
 }
+#ambient p:not(.updated-at) {
+  margin: 40px;
+}
